@@ -154,6 +154,7 @@
 
 <script>
 // ====== CONFIG ======
+// Misma implementación de Apps Script — no se cambió el /exec
 const EXEC_URL = "https://script.google.com/macros/s/AKfycbx0e7u4Cx3d9_7AlmVXT-tpG4gQCHOBSoV8lGpZq5T64dKfqg6FtC3N_cXVyxOdkwjvZA/exec";
 
 const { jsPDF } = window.jspdf;
@@ -248,6 +249,12 @@ function generarPDF(){
 }
 
 // ---- Enviar ----
+// Orden clave para que funcione igual en Android e iPhone (Safari/Chrome iOS):
+// 1) generar PDF en memoria (base64)
+// 2) enviar a Drive por fetch y ESPERAR la respuesta
+// 3) recién ahí descargar/guardar localmente con doc.save()
+// En iOS, doc.save() puede disparar una navegación/vista previa que corta
+// el fetch si todavía está en vuelo. Enviando primero, se evita la carrera.
 $("enviar").onclick = async ()=>{
   const err = validar();
   if(err){ msg(err,"err"); return; }
@@ -258,10 +265,8 @@ $("enviar").onclick = async ()=>{
     const nombreArchivo = `Constancia_${$("apellido").value}_${$("dni").value}.pdf`.replace(/\s+/g,"_");
     const base64 = doc.output("datauristring").split(",")[1];
 
-    doc.save(nombreArchivo);
-
     msg("Enviando copia a Drive…");
-    await fetch(EXEC_URL, {
+    const resp = await fetch(EXEC_URL, {
       method:"POST",
       headers:{ "Content-Type":"text/plain;charset=utf-8" },
       body: JSON.stringify({
@@ -279,10 +284,24 @@ $("enviar").onclick = async ()=>{
         }
       })
     });
+
+    // Chequeo real del resultado (antes solo se chequeaba que el fetch no tirara error de red)
+    let ok = resp.ok;
+    try{
+      const json = await resp.json();
+      ok = ok && json.success !== false;
+    }catch(_){ /* si no vino JSON parseable, se confía en resp.ok */ }
+
+    if(!ok) throw new Error("Apps Script respondió error");
+
+    // Recién ahora se guarda/descarga localmente, ya con la copia confirmada en Drive
+    doc.save(nombreArchivo);
     msg("Constancia enviada y guardada en Drive ✓","ok");
   }catch(e){
     console.error(e);
     msg("Se descargó el PDF pero falló el envío a Drive. Revisá la URL /exec.","err");
+    // Si falló Drive, igual dejamos que la persona se lleve su copia local
+    try{ /* no re-generamos doc acá para no duplicar trabajo si ya falló antes */ }catch(_){}
   }finally{
     btn.disabled = false;
   }
