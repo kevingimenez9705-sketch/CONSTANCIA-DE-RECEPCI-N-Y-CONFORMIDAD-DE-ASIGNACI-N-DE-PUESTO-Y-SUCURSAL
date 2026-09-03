@@ -52,6 +52,10 @@
     padding:14px 26px;font-size:16px;font-weight:600;cursor:pointer}
   .btn:disabled{opacity:.55;cursor:default}
   .msg{font-size:13px;text-align:center}.msg.ok{color:var(--ok)}.msg.err{color:var(--req)}
+  .aviso{display:flex;gap:8px;align-items:flex-start;background:#fff4e0;
+    border:1.5px solid #e8a94c;border-radius:10px;padding:12px 14px;margin:12px 0 4px;
+    font-size:14px;font-weight:700;color:#8a5a00}
+  .aviso .ico{font-size:16px;line-height:1}
 </style>
 </head>
 <body>
@@ -139,7 +143,7 @@
     </div>
 
     <div class="seccion s5">5. FIRMA</div>
-    <p class="parrafo-inline"><em>Recordá que el horario puede variar según la venta del local.</em></p>
+    <div class="aviso"><span class="ico">⚠️</span><span>Recordá que el horario puede variar según la venta del local.</span></div>
     <label class="lbl">Firma <span class="req">*</span></label>
     <div class="firma-box">
       <canvas id="firma"></canvas>
@@ -236,10 +240,16 @@ function generarPDF(){
     `(${qty("q_gorra","c_gorra")}) gorra y (${qty("q_delantal","c_delantal")}) delantal.`;
   doc.text(doc.splitTextToSize(p2, ancho), M, y); y += 58;
 
-  doc.setFont("helvetica","italic"); doc.setFontSize(10);
-  const p3 = "Recordá que el horario puede variar según la venta del local.";
-  doc.text(doc.splitTextToSize(p3, ancho), M, y); y += 30;
-  doc.setFont("helvetica","normal"); doc.setFontSize(12);
+  const p3 = "⚠ Recordá que el horario puede variar según la venta del local.";
+  doc.setFont("helvetica","bold"); doc.setFontSize(11);
+  const p3lineas = doc.splitTextToSize(p3, ancho - 20);
+  const p3alto = p3lineas.length * 14 + 16;
+  doc.setFillColor(255,244,224); doc.setDrawColor(232,169,76);
+  doc.roundedRect(M, y, ancho, p3alto, 4, 4, "FD");
+  doc.setTextColor(138,90,0);
+  doc.text(p3lineas, M + 10, y + 18);
+  y += p3alto + 20;
+  doc.setTextColor(20,40,50); doc.setFont("helvetica","normal"); doc.setFontSize(12);
 
   doc.setFont("helvetica","bold");
   doc.text(`Fecha de firma: ${fechaLegible($("fecha_firma").value)}   Hora: ${$("hora_firma").value||"--"} ${$("ampm_firma").value}`, M, y);
