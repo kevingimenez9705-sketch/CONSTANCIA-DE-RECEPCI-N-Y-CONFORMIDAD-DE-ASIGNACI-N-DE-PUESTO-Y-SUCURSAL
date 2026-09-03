@@ -266,12 +266,8 @@ function generarPDF(){
 }
 
 // ---- Enviar ----
-// Orden clave para que funcione igual en Android e iPhone (Safari/Chrome iOS):
-// 1) generar PDF en memoria (base64)
-// 2) enviar a Drive por fetch y ESPERAR la respuesta
-// 3) recién ahí descargar/guardar localmente con doc.save()
-// En iOS, doc.save() puede disparar una navegación/vista previa que corta
-// el fetch si todavía está en vuelo. Enviando primero, se evita la carrera.
+// Solo se envía la constancia a Drive: al postulante no se le genera
+// ni descarga ninguna copia local del PDF.
 $("enviar").onclick = async ()=>{
   const err = validar();
   if(err){ msg(err,"err"); return; }
@@ -311,14 +307,10 @@ $("enviar").onclick = async ()=>{
 
     if(!ok) throw new Error("Apps Script respondió error");
 
-    // Recién ahora se guarda/descarga localmente, ya con la copia confirmada en Drive
-    doc.save(nombreArchivo);
     msg("Constancia enviada y guardada en Drive ✓","ok");
   }catch(e){
     console.error(e);
-    msg("Se descargó el PDF pero falló el envío a Drive. Revisá la URL /exec.","err");
-    // Si falló Drive, igual dejamos que la persona se lleve su copia local
-    try{ /* no re-generamos doc acá para no duplicar trabajo si ya falló antes */ }catch(_){}
+    msg("Falló el envío a Drive. Revisá la URL /exec e intentá de nuevo.","err");
   }finally{
     btn.disabled = false;
   }
