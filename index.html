@@ -85,8 +85,8 @@
     <label class="lbl">Puesto <span class="req">*</span></label>
     <select id="puesto">
       <option value="">PUESTO</option>
-      <option>Part-time</option>
-      <option>Full-time</option>
+      <option>Part-time (5hs)</option>
+      <option>Full-time (9hs)</option>
       <option>Encargado</option>
       <option>Gerente</option>
     </select>
@@ -139,6 +139,7 @@
     </div>
 
     <div class="seccion s5">5. FIRMA</div>
+    <p class="parrafo-inline"><em>Recordá que el horario puede variar según la venta del local.</em></p>
     <label class="lbl">Firma <span class="req">*</span></label>
     <div class="firma-box">
       <canvas id="firma"></canvas>
@@ -234,6 +235,11 @@ function generarPDF(){
     `(${qty("q_remera","c_remera")}) remera negra, (${qty("q_abrigo","c_abrigo")}) abrigo negro, `+
     `(${qty("q_gorra","c_gorra")}) gorra y (${qty("q_delantal","c_delantal")}) delantal.`;
   doc.text(doc.splitTextToSize(p2, ancho), M, y); y += 58;
+
+  doc.setFont("helvetica","italic"); doc.setFontSize(10);
+  const p3 = "Recordá que el horario puede variar según la venta del local.";
+  doc.text(doc.splitTextToSize(p3, ancho), M, y); y += 30;
+  doc.setFont("helvetica","normal"); doc.setFontSize(12);
 
   doc.setFont("helvetica","bold");
   doc.text(`Fecha de firma: ${fechaLegible($("fecha_firma").value)}   Hora: ${$("hora_firma").value||"--"} ${$("ampm_firma").value}`, M, y);
